@@ -15,3 +15,4 @@ Mutation– Perfrom mutation which alters one or more gene values in a
           chromosome in the new population set generated. Mutation helps in getting more diverse oppourtinity.Obtained population will be used in the next generation
           
 In this train code we used sklearn dataset , breast_cancer , for train our data model and predict the label of data. 
+The improvement after applying GA algorithm is significent 
