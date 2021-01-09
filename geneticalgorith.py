@@ -1,11 +1,16 @@
-from typing import List
-from random import choices
+from typing import List, Callable,Tuple
+from random import choices,randint,randrange,random
 from collections import namedtuple
-from collections.abc import Callable
+
 
 Genome = List[int]
 population = List[Genome]
 FitnessFunc = Callable[[Genome],int]
+PopulateFunc = Callable[[], population]
+SelectionFunc = Callable[[population, FitnessFunc], Tuple[Genome,Genome]]
+CrossoverFunc = Callable[[Genome,Genome],Tuple[Genome,Genome]]
+MutationFunc =Callable[[Genome],Genome]
+
 Thing = namedtuple('Thing', ['name','value','weight'])
 
 things = [
@@ -63,4 +68,39 @@ def selection_pair(population: population, fitness_func : FitnessFunc) -> popula
         k=2
     )
 
-#Cross over function 
+#Cross over function
+def single_pointcrossover(a: Genome, b:Genome)->Tuple[Genome,Genome]:
+    if len(a) != len(b):
+        raise ValueError("Genomes a and b must be of same lenght")
+
+    lenght = len(a)
+    p = randint(1, lenght-1)
+    return a[0:p]+b[p:], b[0:p]+a[p:]
+
+#mutation function
+def mutation(genome: Genome, num: int = 1, probability:float = 0.5) -> Genome:
+    for _ in range(num):
+        index = randrange(len(genome))
+        genome[index] = genome[index] if random() > probability else abs(genome[index]-1)
+    return genome
+
+
+def run_evolution(
+        populate_func: PopulateFunc,
+        fitness_func: FitnessFunc,
+        fitness_limit: int,
+        selection_func : SelectionFunc = selection_pair,
+        crossover_func: CrossoverFunc=single_pointcrossover,
+        mutution_func: MutationFunc=mutation,
+        generation_limit:int=100,
+
+)->Tuple[population,int]:
+    population = populate_func()
+
+    for i in range(generation_limit):
+        population = sorted(
+            population,
+            key=lambda genome: fitness_func(genome),
+            reverse=True
+        )
+        
