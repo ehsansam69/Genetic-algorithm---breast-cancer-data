@@ -1,6 +1,8 @@
 from typing import List, Callable,Tuple
 from random import choices,randint,randrange,random
 from collections import namedtuple
+from functools import partial
+import time
 
 
 Genome = List[int]
@@ -64,7 +66,7 @@ def fitness(genome: Genome, things : [Thing], weight_limit: int) ->int:
 def selection_pair(population: population, fitness_func : FitnessFunc) -> population:
     return choices(
         population = population,
-        weights=[fitness_func(genome) for genom in population],
+        weights=[fitness_func(genome) for genome in population],
         k=2
     )
 
@@ -74,6 +76,8 @@ def single_pointcrossover(a: Genome, b:Genome)->Tuple[Genome,Genome]:
         raise ValueError("Genomes a and b must be of same lenght")
 
     lenght = len(a)
+    if lenght <2:
+        return a,b
     p = randint(1, lenght-1)
     return a[0:p]+b[p:], b[0:p]+a[p:]
 
@@ -84,7 +88,7 @@ def mutation(genome: Genome, num: int = 1, probability:float = 0.5) -> Genome:
         genome[index] = genome[index] if random() > probability else abs(genome[index]-1)
     return genome
 
-
+# a def for running evolution
 def run_evolution(
         populate_func: PopulateFunc,
         fitness_func: FitnessFunc,
@@ -103,4 +107,55 @@ def run_evolution(
             key=lambda genome: fitness_func(genome),
             reverse=True
         )
-        
+        if fitness_func(population[0]) >= fitness_limit:
+            break
+
+        next_generation = population[0:2]
+
+        for j in range(int(len(population)/2)-1):
+            parents = selection_func(population, fitness_func)
+            offspring_a, offspring_b = crossover_func(parents[0],parents[1])
+            offspring_a = mutution_func(offspring_a)
+            offspring_b = mutution_func(offspring_b)
+            next_generation +=[offspring_a,offspring_b]
+
+        population = next_generation
+
+    population = sorted(
+        population,
+        key=lambda genome: fitness_func(genome),
+        reverse=True
+    )
+    return population,i
+
+
+#running :
+start = time.time()
+population,generation = run_evolution(
+    populate_func=partial(
+        generate_population, size=10, genome_lenght=len(things)
+    ),
+    fitness_func=partial(
+        fitness,things = things, weight_limit = 3000
+
+    ),
+    fitness_limit=740,
+    generation_limit=100
+)
+end = time.time()
+
+
+def genome_to_things(genome:Genome, things:[Thing]) ->[Thing]:
+    result=[]
+    for i, thing in enumerate(things):
+        if genome[i] == 1:
+            result +=[thing.name]
+    return result
+
+print(f"number of generations {generation}")
+print(f"time: {end-start}s")
+print(f"best solution{genome_to_things(population[0],things)}")
+
+
+
+
