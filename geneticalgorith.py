@@ -1,9 +1,11 @@
 from typing import List
 from random import choices
 from collections import namedtuple
+from collections.abc import Callable
 
 Genome = List[int]
 population = List[Genome]
+FitnessFunc = Callable[[Genome],int]
 Thing = namedtuple('Thing', ['name','value','weight'])
 
 things = [
@@ -13,6 +15,14 @@ things = [
     Thing('Notepad',40,33),
     Thing('Water bottle',30,192),
 ]
+
+more_things = [
+    Thing('mint',20,10),
+    Thing('phone',500,1000),
+    Thing('baseballcap',150,150),
+    Thing('Socks',10,38),
+    Thing('Tissues',15,80)
+]+ things
 
 #genetic representation of a solutions
 def generate_genome(lenght: int) ->Genome:
@@ -40,6 +50,17 @@ def fitness(genome: Genome, things : [Thing], weight_limit: int) ->int:
                 return 0
 
     return value
+# print(fitness(genome=generate_genome(10),things= more_things, weight_limit=2000)) ,,, ezample
 
 
-print(fitness(genome=generate_genome(5),things= things, weight_limit=20000000))
+
+
+#selection function to select the solution to next generation
+def selection_pair(population: population, fitness_func : FitnessFunc) -> population:
+    return choices(
+        population = population,
+        weights=[fitness_func(genome) for genom in population],
+        k=2
+    )
+
+#Cross over function 
